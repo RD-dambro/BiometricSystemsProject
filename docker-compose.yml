@@ -22,7 +22,7 @@ services:
             - db_net
 
     media:
-        image: illuspas/node-media-server
+        build: ./server/media
         ports:
             - 1935:1935
             - 8000:8000
@@ -54,6 +54,8 @@ services:
         
     client:
         build: ./client
+        environment:
+            keys: "my_webcam" 
         restart: on-failure
         depends_on: 
             - "rabbit"
