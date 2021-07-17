@@ -22,7 +22,7 @@ services:
             - db_net
 
     media:
-        build: ./server/media
+        image: illuspas/node-media-server
         ports:
             - 1935:1935
             - 8000:8000
