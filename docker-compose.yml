@@ -1,0 +1,85 @@
+version: '3'
+
+services:    
+    rabbit:
+        image: "rabbitmq"
+        ports:
+            - 5672:5672
+        networks:
+            - rabbit_net
+        environment:
+            RABBITMQ_DEFAULT_USER: "user"
+            RABBITMQ_DEFAULT_PASS: "password"
+            RABBITMQ_DEFAULT_VHOST: "vhost"
+            
+    db:
+        image: "postgres"
+        environment:
+            POSTGRES_USER: postgres
+            POSTGRES_PASSWORD: mysecretpassword
+            POSTGRES_DB: postgres
+        networks:
+            - db_net
+
+    media:
+        build: ./server/media
+        ports:
+            - 1935:1935
+            - 8000:8000
+        networks:
+            - media_net
+    
+    web:
+        build: ./server/web
+        environment:
+            TYPEORM_HOST: db
+            TYPEORM_PORT: 5432
+        depends_on:
+            - "db"
+        ports:
+            - "3000:3000"
+        networks:
+            - web_net
+            - db_net
+
+    worker:
+        build: ./server/worker
+        restart: on-failure
+        depends_on:
+            - "rabbit"
+            - "db" 
+        networks:
+            - rabbit_net
+            - db_net 
+        
+    client:
+        build: ./client
+        restart: on-failure
+        depends_on: 
+            - "rabbit"
+            - "media"
+        networks:
+            - rabbit_net
+            - media_net 
+
+    app:
+        build: ./user/angapp
+        depends_on:
+            - "web"
+            - "media"
+        ports: 
+            - 4200:80
+        networks:
+            - "web_net"
+            - "media_net"
+
+
+networks:
+    rabbit_net:
+        driver: bridge
+    db_net:
+        driver: bridge
+    media_net:
+        driver: bridge
+    web_net:
+        driver: bridge
